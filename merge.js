@@ -24,12 +24,11 @@ mongodb.MongoClient.connect(dbUrl, { useNewUrlParser: true }, (error, client) =>
     var stack = [] // array to hold the functions
 
 
-    //iterate through the whole customer file, which is an array
+    //iterate through the whole customer file, which is in memory an array
     customerData.forEach((currentCustomer, index) => {
 
         //merge the each customer object with the address object in the matching position (index)
         currentCustomer = Object.assign(currentCustomer, addressData[index])
-
 
         //test the index to see if it is a multiple of the limit.
         //if so, insert from where we left off at the last insert (or the beginning, if first)
@@ -40,7 +39,7 @@ mongodb.MongoClient.connect(dbUrl, { useNewUrlParser: true }, (error, client) =>
             //create a function to insert the range of documents, and push it to the stack array
             stack.push((callback) => {
                 console.log("Inserting " + limit + " records: " + parseInt(index+1) + " - " + end)
-                collection.insertMany(customerData.slice(0, 100), (error, results) => {
+                collection.insertMany(customerData.slice(index, end), (error, results) => {
                     callback(error)
                 })
 
@@ -54,6 +53,5 @@ mongodb.MongoClient.connect(dbUrl, { useNewUrlParser: true }, (error, client) =>
     async.parallel(stack, (error, result) => {
         if (error) errorhandler(error, 'async')
         client.close()
-
     })
 })
